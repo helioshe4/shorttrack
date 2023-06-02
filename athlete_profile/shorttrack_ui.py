@@ -16,7 +16,7 @@ EVENT_1000M = '1000m'
 EVENT_1500M = '1500m'
 DEFAULT_START_POSITION = 1
 DEFAULT_POSITION_CHANGE = 1
-DATA_BASE_FILEPATH = f'./data/{environ.get("DATASET", "full")}/'  # default to full dataset
+DATA_BASE_FILEPATH = f'../data/{environ.get("DATASET", "light")}/'  # default to full dataset
 FULL_ROUNDS_FILEPATH = f'{DATA_BASE_FILEPATH}rounds_with_splits.csv'
 LAPTIMES_FILENAME = 'individual_athlete_lap_data.csv'
 LAPTIMES_FILEPATH = f'{DATA_BASE_FILEPATH}{LAPTIMES_FILENAME}'
@@ -52,14 +52,16 @@ def get_ax():
 
 # declare variable widgets
 athlete_name = pnw.Select(name='Athlete', options=list(individual_events['Name'].unique()))
+event_distance_title = pn.pane.Markdown("### Event Distances")
 event_distance = pnw.RadioButtonGroup(name='Event', value=ALL_EVENTS_NAME)
+start_position_title = pn.pane.Markdown("### Start Positions")
 start_position = pnw.RadioButtonGroup(name='Start Position')
+position_gain_loss_title = pn.pane.Markdown("### Position Gain/Loss")
 position_gain_loss = pnw.RadioButtonGroup(name='Position Gain/Loss')
 athlete_races = pnw.DataFrame()
 athlete_races_single_event = pnw.DataFrame()
 athlete_laptimes = pnw.DataFrame()
 athlete_laptimes_single_event = pnw.DataFrame()
-
 
 def athlete_name_changed(event):
     """
@@ -76,6 +78,28 @@ def athlete_name_changed(event):
         # if there was no change, trigger the widget refresh manually
         event_distance.param.trigger('value')
 
+    # full_name = event.new
+    # display_name = separate_names(full_name=full_name)
+
+    # athlete_name.name = display_name
+
+
+def separate_names(full_name):
+    first_name = ''
+    last_name = ''
+
+    for i in range(1, len(full_name)):
+        if full_name[i].isupper():
+            if full_name[i:].isupper():
+                last_name = full_name[i:].capitalize()
+                first_name = full_name[:i]
+            else:
+                first_name = full_name[i:]
+                last_name = full_name[:i].capitalize()
+            break
+
+    return f"{first_name.capitalize()} {last_name}"
+
 
 def event_distance_changed(event):
     """
@@ -88,8 +112,8 @@ def event_distance_changed(event):
         athlete_races_single_event.value = athlete_races.value[athlete_races.value['event'] == event.new]
         athlete_laptimes_single_event.value = athlete_laptimes.value[athlete_laptimes.value['event'] == event.new]
 
-    start_position.options = list(athlete_races.value['Start Pos.'].unique())
-    position_gain_loss.options = list(athlete_laptimes.value['position_change'].unique())
+    start_position.options = sorted(list(athlete_races.value['Start Pos.'].unique()))
+    position_gain_loss.options = sorted(list(athlete_laptimes.value['position_change'].unique()))
 
     if start_position.value not in start_position.options:
         start_position.value = DEFAULT_START_POSITION
@@ -279,8 +303,11 @@ def view() -> pn.template.base.BasicTemplate:
 
     # set up sidebar display
     ui_template.sidebar.append(athlete_name)
+    ui_template.sidebar.append(event_distance_title)
     ui_template.sidebar.append(event_distance)
+    ui_template.sidebar.append(start_position_title)
     ui_template.sidebar.append(start_position)
+    ui_template.sidebar.append(position_gain_loss_title)
     ui_template.sidebar.append(position_gain_loss)
 
     # set up main display

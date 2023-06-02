@@ -6,3 +6,5 @@ data/full/individual_athlete_lap_data_PREVIOUS.csv
 data/full/individual_athlete_lap_data_PREVIOUS.pk
 data/archive/
 data/scraped/raw/
+env/
+.vscode/
